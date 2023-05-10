@@ -90,7 +90,37 @@ void compute(){
 	}
 	**/
 
-	//sum up the rows of our matrix to get effect on each entity, then update velocity and position.
+	__global__
+	void update_velocity_and_position(vector3* values, vector3** accels){
+
+
+		int currThreadId = blockId.x * blockDim.x + threadIdx.x;	//Hold the calculation so we don't have to repeat it twice (for a few extra nanoseconds :D)
+
+		i = temp_calc / NUMENTITIES; 								//define i in terms of what block/dimension/thread we are currently using
+		j = temp_calc % NUMENTITIES; 								//define j in terms of what block/dimension/thread we are currently using
+
+		if(temp_calc < NUMENTITIES * NUMENTITIES) {					//Ensure that the result of our block is actually in bounds
+			
+			vector3 accel_sum = {accels[currThreadId][0], accels[currThreadId][1], accels[currThreadId][2]};
+
+			hVel[i][0]+=accel_sum[0]*INTERVAL;
+			hPos[i][0]=hVel[i][0]*INTERVAL;
+
+			hVel[i][1]+=accel_sum[1]*INTERVAL;
+			hPos[i][1]=hVel[i][1]*INTERVAL;
+
+			hVel[i][2]+=accel_sum[2]*INTERVAL;
+			hPos[i][2]=hVel[i][2]*INTERVAL;
+
+		}
+
+	}
+
+	update_velocity_and_position<<<numBlocks, blockSize>>>(values, accels);
+	cudaDeviceSynchronize();
+
+
+	/**sum up the rows of our matrix to get effect on each entity, then update velocity and position.
 	for (i=0;i<NUMENTITIES;i++){
 		vector3 accel_sum={0,0,0};
 		for (j=0;j<NUMENTITIES;j++){
@@ -111,7 +141,7 @@ void compute(){
 
 		hVel[i][2]+=accel_sum[2]*INTERVAL;
 		hPos[i][2]=hVel[i][2]*INTERVAL;
-	}
+	}*/
 
 	cudaFree(accels);
 	cudaFree(values);
