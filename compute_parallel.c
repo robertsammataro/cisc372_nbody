@@ -39,12 +39,12 @@ void compute(){
 		//figure out what element of the big 1-d array we are currently working on and
 		//have each thread calculate exactly one index of data
 
-		int currThreadId = blockId.x * blockDim.x + threadIdx.x;	//Hold the calculation so we don't have to repeat it twice (for a few extra nanoseconds :D)
+		int currThreadId = blockId.x * blockDim.x + threadIdx.x;		//Hold the calculation so we don't have to repeat it twice (for a few extra nanoseconds :D)
 
-		i = temp_calc / NUMENTITIES; 								//define i in terms of what block/dimension/thread we are currently using
-		j = temp_calc % NUMENTITIES; 								//define j in terms of what block/dimension/thread we are currently using
+		i = currThreadId / NUMENTITIES; 								//define i in terms of what block/dimension/thread we are currently using
+		j = currThreadId % NUMENTITIES; 								//define j in terms of what block/dimension/thread we are currently using
 
-		if(temp_calc < NUMENTITIES * NUMENTITIES) {					//Ensure that the result of our block is actually in bounds
+		if(currThreadId < NUMENTITIES * NUMENTITIES) {					//Ensure that the result of our block is actually in bounds
 
 			if(i == j) {
 				FILL_VECTOR(accels[i][j],0,0,0);
@@ -94,12 +94,12 @@ void compute(){
 	void update_velocity_and_position(vector3* values, vector3** accels){
 
 
-		int currThreadId = blockId.x * blockDim.x + threadIdx.x;	//Hold the calculation so we don't have to repeat it twice (for a few extra nanoseconds :D)
+		int currThreadId = blockId.x * blockDim.x + threadIdx.x;		//Hold the calculation so we don't have to repeat it twice (for a few extra nanoseconds :D)
 
-		i = temp_calc / NUMENTITIES; 								//define i in terms of what block/dimension/thread we are currently using
-		j = temp_calc % NUMENTITIES; 								//define j in terms of what block/dimension/thread we are currently using
+		i = currThreadId / NUMENTITIES; 								//define i in terms of what block/dimension/thread we are currently using
+		j = currThreadId % NUMENTITIES; 								//define j in terms of what block/dimension/thread we are currently using
 
-		if(temp_calc < NUMENTITIES * NUMENTITIES) {					//Ensure that the result of our block is actually in bounds
+		if(currThreadId < NUMENTITIES * NUMENTITIES) {					//Ensure that the result of our block is actually in bounds
 			
 			vector3 accel_sum = {accels[currThreadId][0], accels[currThreadId][1], accels[currThreadId][2]};
 
