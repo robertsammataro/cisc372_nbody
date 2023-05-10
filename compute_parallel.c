@@ -2,6 +2,7 @@
 #include <math.h>
 #include "vector.h"
 #include "config.h"
+#include <cuda_runtime.h>
 
 //compute: Updates the positions and locations of the objects in the system based on gravity.
 //Parameters: None
@@ -17,14 +18,20 @@ void compute(){
 	cudaMallocManaged(values, sizeof(vector3)*NUMENTITIES*NUMENTITIES);
 	cudaMallocManaged(accels, sizeof(vector3*)*NUMENTITIES);
 
+	//Parallelize the array population.								//I think this section is correct????
+	__global__														//
+	void populateArray(vector3* values, vector3** accels) {			//
+																	//
+		int i = blockIdx.x * blockDim.x + threadIdx.x;				//
+		accels[i]=&values[i*NUMENTITIES];							//
+																	//
+	}
 
+	int blockSize = 256;											//Blocksize can be messed around with
+	int numBlocks = (NUMENTITIES + blockSize - 1) / blockSize;
 
-	for (i=0;i<NUMENTITIES;i++)
-		accels[i]=&values[i*NUMENTITIES];
-
-
-
-
+	populateArray<<<numBlocks, blockSize>>>(values, accels);
+	cudaDeviceSynchronize();
 
 
 	//first compute the pairwise accelerations.  Effect is on the first argument.
@@ -44,11 +51,6 @@ void compute(){
 		}
 	}
 
-
-
-
-
-
 	//sum up the rows of our matrix to get effect on each entity, then update velocity and position.
 	for (i=0;i<NUMENTITIES;i++){
 		vector3 accel_sum={0,0,0};
@@ -64,8 +66,6 @@ void compute(){
 		}
 	}
 
-
-
-	free(accels);
-	free(values);
+	cudaFree(accels);
+	cudaFree(values);
 }
