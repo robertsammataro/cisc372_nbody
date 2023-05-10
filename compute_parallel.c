@@ -10,8 +10,6 @@
 //Side Effect: Modifies the hPos and hVel arrays with the new positions and accelerations after 1 INTERVAL
 void compute(){
 	//make an acceleration matrix which is NUMENTITIES squared in size;
-	int i,j,k;
-
 	vector3* values;
 	vector3** accels;
 
@@ -41,12 +39,12 @@ void compute(){
 		//figure out what element of the big 1-d array we are currently working on and
 		//have each thread calculate exactly one index of data
 
-		int temp_calc = blockId.x * blockDim.x + threadIdx.x;	//Hold the calculation so we don't have to repeat it twice (for a few extra nanoseconds :D)
+		int currThreadId = blockId.x * blockDim.x + threadIdx.x;	//Hold the calculation so we don't have to repeat it twice (for a few extra nanoseconds :D)
 
-		i = temp_calc / NUMENTITIES; 							//define i in terms of what block/dimension/thread we are currently using
-		j = temp_calc % NUMENTITIES; 							//define j in terms of what block/dimension/thread we are currently using
+		i = temp_calc / NUMENTITIES; 								//define i in terms of what block/dimension/thread we are currently using
+		j = temp_calc % NUMENTITIES; 								//define j in terms of what block/dimension/thread we are currently using
 
-		if(temp_calc < NUMENTITIES * NUMENTITIES) {				//Ensure that the result of our block is actually in bounds
+		if(temp_calc < NUMENTITIES * NUMENTITIES) {					//Ensure that the result of our block is actually in bounds
 
 			if(i == j) {
 				FILL_VECTOR(accels[i][j],0,0,0);
@@ -96,15 +94,23 @@ void compute(){
 	for (i=0;i<NUMENTITIES;i++){
 		vector3 accel_sum={0,0,0};
 		for (j=0;j<NUMENTITIES;j++){
-			for (k=0;k<3;k++)
-				accel_sum[k]+=accels[i][j][k];
+				
+				accel_sum[0]+=accels[i][j][0];
+				accel_sum[1]+=accels[i][j][1];
+				accel_sum[2]+=accels[i][j][2];
+		
 		}
+
 		//compute the new velocity based on the acceleration and time interval
 		//compute the new position based on the velocity and time interval
-		for (k=0;k<3;k++){
-			hVel[i][k]+=accel_sum[k]*INTERVAL;
-			hPos[i][k]=hVel[i][k]*INTERVAL;
-		}
+		hVel[i][0]+=accel_sum[0]*INTERVAL;
+		hPos[i][0]=hVel[i][0]*INTERVAL;
+
+		hVel[i][1]+=accel_sum[1]*INTERVAL;
+		hPos[i][1]=hVel[i][1]*INTERVAL;
+
+		hVel[i][2]+=accel_sum[2]*INTERVAL;
+		hPos[i][2]=hVel[i][2]*INTERVAL;
 	}
 
 	cudaFree(accels);
